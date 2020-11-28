@@ -14,9 +14,13 @@
     "types": [
       "webpack-env"
     ],
+    "typeRoots": ["types", "node_modules/@types"],
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "vue-qrcode-reader": [
+        "types/vue-qrcode-reader"
       ]
     },
     "lib": [
