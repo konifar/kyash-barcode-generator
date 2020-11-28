@@ -46,6 +46,7 @@
         </div>
       </QrcodeDropZone>
       <QrcodeCapture @decode="onDecode" />
+      <QrcodeVue :value="result" :size="200" />
     </v-main>
   </v-app>
 </template>
@@ -53,6 +54,7 @@
 <script lang="ts">
 import Vue from "vue";
 import { QrcodeDropZone, QrcodeCapture } from "vue-qrcode-reader";
+import QrcodeVue from "qrcode.vue";
 import HelloWorld from "./components/HelloWorld.vue";
 
 export default Vue.extend({
@@ -60,7 +62,8 @@ export default Vue.extend({
 
   components: {
     QrcodeDropZone,
-    QrcodeCapture
+    QrcodeCapture,
+    QrcodeVue
   },
 
   data: () => ({
