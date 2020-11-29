@@ -65,55 +65,50 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
+import { Vue, Component, Prop } from 'vue-property-decorator'
 import { QrcodeDropZone, QrcodeCapture } from "vue-qrcode-reader";
 import QrcodeVue from "qrcode.vue";
-import HelloWorld from "./components/HelloWorld.vue";
 
-export default Vue.extend({
-  name: "App",
-
+@Component({
   components: {
     QrcodeDropZone,
     QrcodeCapture,
     QrcodeVue
-  },
+  }
+})
+export default class App extends Vue {
+  public url = ""
+  public errorMessage = ""
+  public isDragging = false
 
-  data: () => ({
-    url: "",
-    errorMessage: "",
-    isDragging: false
-  }),
-  
-  methods: {
-    onDecode (decodedString: string) {
-      this.url = decodedString
-    },
-    async onDetect (promise: Promise<any>) {
-      try {
-        const { content } = await promise
-        this.url = content
-        this.errorMessage = ""
-      } catch (error) {
-        if (error.name === 'DropImageFetchError') {
-          this.errorMessage = 'Failed to load images.'
-        } else if (error.name === 'DropImageDecodeError') {
-          this.errorMessage = 'Failed to decode file. Maybe it\'s not an image.'
-        } else {
-          this.errorMessage = 'Ups, what kind of error is this?! ' + error.message
-        }
+  private onDecode(decodedString: string) {
+    this.url = decodedString
+  }
+
+  private async onDetect(promise: Promise<any>) {
+    try {
+      const { content } = await promise
+      this.url = content
+      this.errorMessage = ""
+    } catch (error) {
+      if (error.name === 'DropImageFetchError') {
+        this.errorMessage = 'Failed to load images.'
+      } else if (error.name === 'DropImageDecodeError') {
+        this.errorMessage = 'Failed to decode file. Maybe it\'s not an image.'
+      } else {
+        this.errorMessage = 'Ups, what kind of error is this?! ' + error.message
       }
-    },
-
-    onDragInit (promise: Promise<any>) {
-      promise.catch(console.error)
-    },
-
-    onDragOver (isDraggingOver: boolean) {
-      this.isDragging = isDraggingOver
     }
   }
-});
+
+  private onDragInit(promise: Promise<any>) {
+    promise.catch(console.error)
+  }
+
+  private onDragOver(isDraggingOver: boolean) {
+    this.isDragging = isDraggingOver
+  }
+}
 </script>
 
 <style>
