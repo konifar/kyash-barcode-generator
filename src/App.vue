@@ -27,7 +27,7 @@
               <div 
                 class="drop-area" 
                 :class="{ 'dragover': isDragging }">
-                Drag Kyash barcode here
+                <p>Drag Kyash barcode here</p>
                 <QrcodeVue 
                   v-if="url !== ''"
                   :value="url"
@@ -35,7 +35,7 @@
               </div>
             </QrcodeDropZone>
 
-            <QrcodeCapture @decode="onDecode" />
+            <QrcodeCapture @decode="onDecode" class="my-4" />
 
             <v-alert 
               v-if="errorMessage !== ''" 
@@ -48,7 +48,7 @@
           </v-col>
 
           <!-- Barcode data area -->
-          <v-col cols="12" xs="12" md="8" style="background-color: #F8BBD0">
+          <v-col cols="12" xs="12" md="8">
             <p class="decode-result">Last result: <b>{{ url }}</b></p>
             <v-text-field
               v-model="url"
@@ -124,16 +124,10 @@ export default Vue.extend({
   text-align: center;
   font-weight: bold;
   padding: 10px;
-
   background-color: rgba(0,0,0,.5);
 }
 
 .dragover {
   background-color: rgba(0,0,0,.8);
-}
-
-.drop-error {
-  color: red;
-  font-weight: bold;
 }
 </style>
