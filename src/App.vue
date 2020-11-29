@@ -73,7 +73,7 @@ export default Vue.extend({
     onDecode (decodedString: string) {
       this.result = decodedString
     },
-    async onDetect (promise: Promise<string>) {
+    async onDetect (promise: Promise<any>) {
       try {
         const { content } = await promise
         this.result = content
