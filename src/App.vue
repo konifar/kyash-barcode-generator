@@ -89,7 +89,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import Vue from "vue";
 import { QrcodeDropZone, QrcodeCapture } from "vue-qrcode-reader";
 import QrcodeVue from "qrcode.vue";
 
@@ -97,115 +97,122 @@ const KYASH_DEEPLINK_PROTOCOL = "kyash:";
 const KYASH_DEEPLINK_PATH_NAME = "//qr/u/";
 const ACTIONS = ["send", "request"];
 
-@Component({
+export default Vue.extend({
+  name: "App",
+
   components: {
     QrcodeDropZone,
     QrcodeCapture,
     QrcodeVue
-  }
-})
-export default class App extends Vue {
-  public url = "";
-  public id = "";
-  public action = ACTIONS[0];
-  public amount = "";
-  public message = "";
+  },
 
-  public errorMessage = "";
-  public isDragging = false;
-  public actionItems = ACTIONS;
+  data: () => ({
+    url: "",
+    id: "",
+    action: ACTIONS[0],
+    amount: "",
+    message: "",
 
-  public idRules = [(value: string) => (value ? true : "ID is required")];
-  public amountRules = [
-    (value: string) =>
-      value === "" ||
-      parseInt(value) > 0 ||
-      "Amount must be greater than or equal to 1 or empty",
-    (value: string) =>
-      value === "" ||
-      parseInt(value) <= 50000 ||
-      "Amount must be less than 50000"
-  ];
-  public messageRules = [
-    (value: string) =>
-      value.length <= 250 ||
-      "Message must be less than or equal to 250 characters"
-  ];
+    errorMessage: "",
+    isDragging: false,
+    actionItems: ACTIONS,
 
-  private onDecode(decodedString: string) {
-    try {
-      this.errorMessage = "";
-      const url = this.validateBarcodeString(decodedString);
-      this.url = url.href;
+    idRules: [(value: string) => (value ? true : "ID is required")],
+    amountRules: [
+      (value: string) =>
+        value === "" ||
+        parseInt(value) > 0 ||
+        "Amount must be greater than or equal to 1 or empty",
+      (value: string) =>
+        value === "" ||
+        parseInt(value) <= 50000 ||
+        "Amount must be less than 50000"
+    ],
+    messageRules: [
+      (value: string) =>
+        value.length <= 250 ||
+        "Message must be less than or equal to 250 characters"
+    ]
+  }),
 
-      this.id = url.pathname.replace(KYASH_DEEPLINK_PATH_NAME, "");
-      const params = url.searchParams;
-      const action = params.get("action") || ACTIONS[0];
-      if (ACTIONS.includes(action)) {
-        this.action = action;
+  methods: {
+    onDecode(decodedString: string) {
+      try {
+        this.errorMessage = "";
+        const url = this.validateBarcodeString(decodedString);
+        this.url = url.href;
+
+        this.id = url.pathname.replace(KYASH_DEEPLINK_PATH_NAME, "");
+        const params = url.searchParams;
+        const action = params.get("action") || ACTIONS[0];
+        if (ACTIONS.includes(action)) {
+          this.action = action;
+        }
+        this.amount = params.get("amount") || "";
+        this.message = params.get("message") || "";
+      } catch (e) {
+        this.errorMessage = e.message;
       }
-      this.amount = params.get("amount") || "";
-      this.message = params.get("message") || "";
-    } catch (e) {
-      this.errorMessage = e.message;
-    }
-  }
+    },
 
-  private async onDetect(promise: Promise<any>) {
-    try {
-      const { content } = await promise;
-      this.onDecode(content);
-    } catch (error) {
-      if (error.name === "DropImageFetchError") {
-        this.errorMessage = "Failed to load images.";
-      } else if (error.name === "DropImageDecodeError") {
-        this.errorMessage = "Failed to decode file. Maybe it's not an image.";
-      } else {
-        this.errorMessage = "Unexpected error: " + error.message;
+    async onDetect(promise: Promise<any>) {
+      try {
+        const { content } = await promise;
+        this.onDecode(content);
+      } catch (error) {
+        if (error.name === "DropImageFetchError") {
+          this.errorMessage = "Failed to load images.";
+        } else if (error.name === "DropImageDecodeError") {
+          this.errorMessage = "Failed to decode file. Maybe it's not an image.";
+        } else {
+          this.errorMessage = "Unexpected error: " + error.message;
+        }
       }
-    }
-  }
+    },
 
-  private onDragInit(promise: Promise<any>) {
-    promise.catch(console.error);
-  }
+    onDragInit(promise: Promise<any>) {
+      promise.catch(console.error);
+    },
 
-  private onDragOver(isDraggingOver: boolean) {
-    this.isDragging = isDraggingOver;
-  }
+    onDragOver(isDraggingOver: boolean) {
+      this.isDragging = isDraggingOver;
+    },
 
-  private generateUrl() {
-    const newUrl = new URL(
-      KYASH_DEEPLINK_PROTOCOL + KYASH_DEEPLINK_PATH_NAME + this.id
-    );
-    if (this.action !== "") {
-      newUrl.searchParams.append("action", this.action);
-    }
-    if (this.amount !== "") {
-      newUrl.searchParams.append("amount", this.amount);
-    }
-    if (this.message !== "") {
-      newUrl.searchParams.append("message", this.message);
-    }
-    this.url = newUrl.href;
-  }
+    generateUrl() {
+      const newUrl = new URL(
+        KYASH_DEEPLINK_PROTOCOL + KYASH_DEEPLINK_PATH_NAME + this.id
+      );
+      if (this.action !== "") {
+        newUrl.searchParams.append("action", this.action);
+      }
+      if (this.amount !== "") {
+        newUrl.searchParams.append("amount", this.amount);
+      }
+      if (this.message !== "") {
+        newUrl.searchParams.append("message", this.message);
+      }
+      this.url = newUrl.href;
+    },
 
-  private validateBarcodeString(barcodeString: string): URL {
-    try {
-      const url = new URL(barcodeString);
-      console.log(url.pathname);
-      if (
-        !url.protocol.startsWith(KYASH_DEEPLINK_PROTOCOL) ||
-        !url.pathname.startsWith(KYASH_DEEPLINK_PATH_NAME)
-      ) {
+    validateBarcodeString(barcodeString: string): URL {
+      try {
+        const url = new URL(barcodeString);
+        console.log(url.pathname);
+        if (
+          !url.protocol.startsWith(KYASH_DEEPLINK_PROTOCOL) ||
+          !url.pathname.startsWith(KYASH_DEEPLINK_PATH_NAME)
+        ) {
+          throw new Error(
+            "Invalid kyash deeplink url: '" + barcodeString + "'"
+          );
+        }
+        return url;
+      } catch (e) {
         throw new Error("Invalid kyash deeplink url: '" + barcodeString + "'");
       }
-      return url;
-    } catch (e) {
-      throw new Error("Invalid kyash deeplink url: '" + barcodeString + "'");
     }
   }
-}
+});
 </script>
 
 <style>
