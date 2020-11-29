@@ -5,11 +5,7 @@
         <v-toolbar-title>Kyash Barcode Generator</v-toolbar-title>
       </div>
       <v-spacer></v-spacer>
-      <v-btn
-        href="https://github.com/konifar/kyash-barcode-generator"
-        target="_blank"
-        text
-      >
+      <v-btn href="https://github.com/konifar/kyash-barcode-generator" target="_blank" text>
         <span class="mr-2">GitHub</span>
         <v-icon>mdi-open-in-new</v-icon>
       </v-btn>
@@ -18,29 +14,30 @@
     <v-main>
       <v-container>
         <v-row>
-          <v-col cols="12" sm="12" md="4" style="background-color: #FFCDD2">
-            <p v-if="error !== null" class="drop-error">
-              {{ error }}
-            </p>
-            <QrcodeDropZone @detect="onDetect" @dragover="onDragOver" @init="logErrors">
-              <div>
-              <div class="drop-area" :class="{ 'dragover': dragover }">
-                DROP SOME IMAGES HERE
-              </div>
-              <QrcodeVue :value="result" :size="200" />
+          <!-- Barcode reading area -->
+          <v-col cols="12" xs="12" md="4">
+            <QrcodeDropZone @detect="onDetect" @dragover="onDragOver" @init="onDragInit">
+              <div class="drop-area" :class="{ 'dragover': isDragging }">
+                <p>Drag Kyash barcode here</p>
+                <QrcodeVue v-if="url !== ''" :value="url" :size="200" />
               </div>
             </QrcodeDropZone>
-            <QrcodeCapture @decode="onDecode" />
+
+            <QrcodeCapture @decode="onDecode" class="my-4" />
+
+            <v-alert v-if="errorMessage !== ''" border="left" dismissible outlined type="error">
+              {{ errorMessage }}
+            </v-alert>
           </v-col>
-          <v-col cols="12" sm="12" md="8" style="background-color: #F8BBD0">
-            <p class="decode-result">Last result: <b>{{ result }}</b></p>
-            <v-text-field
-              v-model="result"
-              label="Amount"
-            />
-            <v-text-field
-              label="Message"
-            />
+
+          <!-- Barcode data input area -->
+          <v-col cols="12" xs="12" md="8">
+            <v-text-field label="Id" v-model="id" @input="generateUrl" />
+            <v-select label="Action" :items="actionItems" v-model="action" @input="generateUrl" />
+            <v-text-field label="Amount" v-model="amount" @input="generateUrl" />
+            <v-text-field label="Message" v-model="message" @input="generateUrl" />
+
+            <v-alert v-if="url !== ''" border="left" color="blue" type="success" outlined>{{ url }}</v-alert>
           </v-col>
         </v-row>
       </v-container>
@@ -49,74 +46,116 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
+import { Vue, Component, Prop } from 'vue-property-decorator'
 import { QrcodeDropZone, QrcodeCapture } from "vue-qrcode-reader";
 import QrcodeVue from "qrcode.vue";
-import HelloWorld from "./components/HelloWorld.vue";
 
-export default Vue.extend({
-  name: "App",
+const KYASH_DEEPLINK_PROTOCOL = "kyash:"
+const KYASH_DEEPLINK_PATH_NAME = "//qr/u/"
+const ACTIONS = ['send', 'request']
 
+@Component({
   components: {
     QrcodeDropZone,
     QrcodeCapture,
     QrcodeVue
-  },
+  }
+})
+export default class App extends Vue {
+  public url = ""
+  public id = ""
+  public action = ACTIONS[0]
+  public amount = ""
+  public message = ""
 
-  data: () => ({
-    result: "",
-    error: "",
-    dragover: false
-  }),
-  
-  methods: {
-    onDecode (decodedString: string) {
-      this.result = decodedString
-    },
-    async onDetect (promise: Promise<any>) {
-      try {
-        const { content } = await promise
-        this.result = content
-        this.error = ""
-      } catch (error) {
-        if (error.name === 'DropImageFetchError') {
-          this.error = 'Sorry, you can\'t load cross-origin images :/'
-        } else if (error.name === 'DropImageDecodeError') {
-          this.error = 'Ok, that\'s not an image. That can\'t be decoded.'
-        } else {
-          this.error = 'Ups, what kind of error is this?! ' + error.message
-        }
+  public errorMessage = ""
+  public isDragging = false
+  public actionItems = ACTIONS
+
+  private onDecode(decodedString: string) {
+    try {
+      this.errorMessage = ""
+      const url = this.validateBarcodeString(decodedString)
+      this.url = url.href
+
+      this.id = url.pathname.replace(KYASH_DEEPLINK_PATH_NAME, '')
+      const params =url.searchParams 
+      const action = params.get("action") || ACTIONS[0]
+      if (ACTIONS.includes(action)) {
+        this.action = action
       }
-    },
-
-    logErrors (promise: Promise<string>) {
-      promise.catch(console.error)
-    },
-
-    onDragOver (isDraggingOver: boolean) {
-      this.dragover = isDraggingOver
+      this.amount = params.get("amount") || ""
+      this.message = params.get("message") || ""
+    } catch (e) {
+      this.errorMessage = e.message
     }
   }
-});
+
+  private async onDetect(promise: Promise<any>) {
+    try {
+      const { content } = await promise
+      this.onDecode(content)
+    } catch (error) {
+      if (error.name === 'DropImageFetchError') {
+        this.errorMessage = 'Failed to load images.'
+      } else if (error.name === 'DropImageDecodeError') {
+        this.errorMessage = 'Failed to decode file. Maybe it\'s not an image.'
+      } else {
+        this.errorMessage = 'Ups, what kind of error is this?! ' + error.message
+      }
+    }
+  }
+
+  private onDragInit(promise: Promise<any>) {
+    promise.catch(console.error)
+  }
+
+  private onDragOver(isDraggingOver: boolean) {
+    this.isDragging = isDraggingOver
+  }
+
+  private generateUrl() {
+    const newUrl = new URL(KYASH_DEEPLINK_PROTOCOL + KYASH_DEEPLINK_PATH_NAME + this.id);
+    if (this.action !== '') {
+      newUrl.searchParams.append("action", this.action)
+    }
+    if (this.amount !== '') {
+      newUrl.searchParams.append("amount", this.amount)
+    }
+    if (this.message !== '') {
+      newUrl.searchParams.append("message", this.message)
+    }
+    this.url = newUrl.href
+  }
+
+  private validateBarcodeString(barcodeString: string): URL {
+    try {
+      const url = new URL(barcodeString)
+      console.log(url.pathname)
+      if (!url.protocol.startsWith(KYASH_DEEPLINK_PROTOCOL) 
+        || !url.pathname.startsWith(KYASH_DEEPLINK_PATH_NAME)) {
+        throw new Error("Invalid kyash deeplink url.");
+      }
+      return url
+    } catch (e) {
+      throw new Error("Invalid kyash deeplink url.");
+    }
+  }
+}
 </script>
 
 <style>
 .drop-area {
   height: 300px;
+  width: 300px;
   color: #fff;
   text-align: center;
   font-weight: bold;
   padding: 10px;
-
   background-color: rgba(0,0,0,.5);
 }
 
 .dragover {
   background-color: rgba(0,0,0,.8);
-}
-
-.drop-error {
-  color: red;
-  font-weight: bold;
 }
 </style>

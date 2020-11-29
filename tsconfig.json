@@ -9,6 +9,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
     "sourceMap": true,
     "baseUrl": ".",
     "types": [
@@ -22,10 +23,6 @@
     "paths": {
       "@/*": [
         "src/*"
-      ],
-      "vue-qrcode-reader": [
-        "types/vue-qrcode-reader",
-        "types/qrcode.vue"
       ]
     },
     "lib": [

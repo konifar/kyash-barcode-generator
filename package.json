@@ -11,6 +11,7 @@
     "core-js": "^3.6.5",
     "qrcode.vue": "^1.7.0",
     "vue": "^2.6.11",
+    "vue-property-decorator": "^9.1.2",
     "vue-qrcode-reader": "^2.3.15",
     "vuetify": "^2.2.11"
   },
