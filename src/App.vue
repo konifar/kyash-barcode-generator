@@ -30,13 +30,14 @@
             </v-alert>
           </v-col>
 
-          <!-- Barcode data area -->
+          <!-- Barcode data input area -->
           <v-col cols="12" xs="12" md="8">
-            <p class="decode-result">Last result: <b>{{ url }}</b></p>
             <v-text-field label="Id" v-model="id" />
+            <v-select label="Action" :items="actionItems" v-model="action" />
             <v-text-field label="Amount" v-model="amount" />
-            <v-text-field label="Action" v-model="action" />
             <v-text-field label="Message" v-model="message" />
+
+            <v-alert v-if="url !== ''" border="left" color="blue" type="success" outlined>{{ url }}</v-alert>
           </v-col>
         </v-row>
       </v-container>
@@ -51,6 +52,7 @@ import QrcodeVue from "qrcode.vue";
 
 const KYASH_DEEPLINK_PROTOCOL = "kyash:"
 const KYASH_DEEPLINK_PATH_NAME = "//qr/u/"
+const ACTIONS = ['send', 'request']
 
 @Component({
   components: {
@@ -62,12 +64,13 @@ const KYASH_DEEPLINK_PATH_NAME = "//qr/u/"
 export default class App extends Vue {
   public url = ""
   public id = ""
-  public action = ""
+  public action = ACTIONS[0]
   public amount = ""
   public message = ""
 
   public errorMessage = ""
   public isDragging = false
+  public actionItems = ACTIONS
 
   private onDecode(decodedString: string) {
     try {
@@ -77,7 +80,7 @@ export default class App extends Vue {
 
       this.id = url.pathname.replace(KYASH_DEEPLINK_PATH_NAME, '')
       const params =url.searchParams 
-      const action = params.get("action") || ""
+      const action = params.get("action") || ACTIONS[0]
       if (action == "send" || action == "request") {
         this.action = action
       }
