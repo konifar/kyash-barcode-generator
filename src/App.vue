@@ -1,52 +1,49 @@
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark>
+    <v-app-bar app title>
       <div class="d-flex align-center">
-        <v-img
-          alt="Vuetify Logo"
-          class="shrink mr-2"
-          contain
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-logo-dark.png"
-          transition="scale-transition"
-          width="40"
-        />
-
-        <v-img
-          alt="Vuetify Name"
-          class="shrink mt-1 hidden-sm-and-down"
-          contain
-          min-width="100"
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-name-dark.png"
-          width="100"
-        />
+        <v-toolbar-title>Kyash Barcode Generator</v-toolbar-title>
       </div>
-
       <v-spacer></v-spacer>
-
       <v-btn
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
+        href="https://github.com/konifar/kyash-barcode-generator"
         target="_blank"
         text
       >
-        <span class="mr-2">Latest Release</span>
+        <span class="mr-2">GitHub</span>
         <v-icon>mdi-open-in-new</v-icon>
       </v-btn>
     </v-app-bar>
 
     <v-main>
-      <p class="decode-result">Last result: <b>{{ result }}</b></p>
-
-      <p v-if="error !== null" class="drop-error">
-        {{ error }}
-      </p>
-
-      <QrcodeDropZone @detect="onDetect" @dragover="onDragOver" @init="logErrors">
-        <div class="drop-area" :class="{ 'dragover': dragover }">
-          DROP SOME IMAGES HERE
-        </div>
-      </QrcodeDropZone>
-      <QrcodeCapture @decode="onDecode" />
-      <QrcodeVue :value="result" :size="200" />
+      <v-container>
+        <v-row>
+          <v-col cols="12" sm="12" md="4" style="background-color: #FFCDD2">
+            <p v-if="error !== null" class="drop-error">
+              {{ error }}
+            </p>
+            <QrcodeDropZone @detect="onDetect" @dragover="onDragOver" @init="logErrors">
+              <div>
+              <div class="drop-area" :class="{ 'dragover': dragover }">
+                DROP SOME IMAGES HERE
+              </div>
+              <QrcodeVue :value="result" :size="200" />
+              </div>
+            </QrcodeDropZone>
+            <QrcodeCapture @decode="onDecode" />
+          </v-col>
+          <v-col cols="12" sm="12" md="8" style="background-color: #F8BBD0">
+            <p class="decode-result">Last result: <b>{{ result }}</b></p>
+            <v-text-field
+              v-model="result"
+              label="Amount"
+            />
+            <v-text-field
+              label="Message"
+            />
+          </v-col>
+        </v-row>
+      </v-container>
     </v-main>
   </v-app>
 </template>
