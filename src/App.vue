@@ -32,10 +32,10 @@
 
           <!-- Barcode data input area -->
           <v-col cols="12" xs="12" md="8">
-            <v-text-field label="Id" v-model="id" />
-            <v-select label="Action" :items="actionItems" v-model="action" />
-            <v-text-field label="Amount" v-model="amount" />
-            <v-text-field label="Message" v-model="message" />
+            <v-text-field label="Id" v-model="id" @input="generateUrl" />
+            <v-select label="Action" :items="actionItems" v-model="action" @input="generateUrl" />
+            <v-text-field label="Amount" v-model="amount" @input="generateUrl" />
+            <v-text-field label="Message" v-model="message" @input="generateUrl" />
 
             <v-alert v-if="url !== ''" border="left" color="blue" type="success" outlined>{{ url }}</v-alert>
           </v-col>
@@ -81,7 +81,7 @@ export default class App extends Vue {
       this.id = url.pathname.replace(KYASH_DEEPLINK_PATH_NAME, '')
       const params =url.searchParams 
       const action = params.get("action") || ACTIONS[0]
-      if (action == "send" || action == "request") {
+      if (ACTIONS.includes(action)) {
         this.action = action
       }
       this.amount = params.get("amount") || ""
@@ -112,6 +112,20 @@ export default class App extends Vue {
 
   private onDragOver(isDraggingOver: boolean) {
     this.isDragging = isDraggingOver
+  }
+
+  private generateUrl() {
+    const newUrl = new URL(KYASH_DEEPLINK_PROTOCOL + KYASH_DEEPLINK_PATH_NAME + this.id);
+    if (this.action !== '') {
+      newUrl.searchParams.append("action", this.action)
+    }
+    if (this.amount !== '') {
+      newUrl.searchParams.append("amount", this.amount)
+    }
+    if (this.message !== '') {
+      newUrl.searchParams.append("message", this.message)
+    }
+    this.url = newUrl.href
   }
 
   private validateBarcodeString(barcodeString: string): URL {
