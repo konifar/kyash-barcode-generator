@@ -16,7 +16,10 @@
         <v-row>
           <!-- Barcode reading area -->
           <v-col cols="12" xs="12" md="4">
-            <QrcodeDropZone @detect="onDetect" @dragover="onDragOver" @init="onDragInit">
+            <QrcodeDropZone
+              @detect="onDetect"
+              @dragover="onDragOver"
+              @init="onDragInit">
               <div class="drop-area" :class="{ 'dragover': isDragging }">
                 <p>Drag Kyash barcode here</p>
                 <QrcodeVue v-if="url !== ''" :value="url" :size="200" />
@@ -32,10 +35,23 @@
 
           <!-- Barcode data input area -->
           <v-col cols="12" xs="12" md="8">
-            <v-text-field label="Id" v-model="id" @input="generateUrl" />
-            <v-select label="Action" :items="actionItems" v-model="action" @input="generateUrl" />
-            <v-text-field label="Amount" v-model="amount" @input="generateUrl" />
-            <v-text-field label="Message" v-model="message" @input="generateUrl" />
+            <v-text-field label="ID" 
+              :rules="idRules"
+              v-model="id" 
+              @input="generateUrl" />
+            <v-select label="Action" 
+              :items="actionItems"
+              v-model="action"
+              @input="generateUrl" />
+            <v-text-field label="Amount" type="number"
+              :rules="amountRules" 
+              v-model.number="amount" 
+              @input="generateUrl" />
+            <v-text-field label="Message" 
+              :rules="messageRules"
+              :counter="250" 
+              v-model="message" 
+              @input="generateUrl" />
 
             <v-alert v-if="url !== ''" border="left" color="blue" type="success" outlined>{{ url }}</v-alert>
           </v-col>
@@ -72,6 +88,17 @@ export default class App extends Vue {
   public isDragging = false
   public actionItems = ACTIONS
 
+  public idRules = [
+    (value: string) => value ? true : 'ID is required'
+  ];
+  public amountRules = [
+    (value: string) => (value === "" || parseInt(value) > 0) || 'Amount must be greater than or equal to 1 or empty',
+    (value: string) => (value === "" || parseInt(value) <= 50000) || 'Amount must be less than 50000',
+  ]
+  public messageRules = [
+    (value: string) => value.length <= 250 || 'Message must be less than or equal to 250 characters'
+  ];
+
   private onDecode(decodedString: string) {
     try {
       this.errorMessage = ""
@@ -101,7 +128,7 @@ export default class App extends Vue {
       } else if (error.name === 'DropImageDecodeError') {
         this.errorMessage = 'Failed to decode file. Maybe it\'s not an image.'
       } else {
-        this.errorMessage = 'Ups, what kind of error is this?! ' + error.message
+        this.errorMessage = 'Unexpected error: ' + error.message
       }
     }
   }
@@ -134,11 +161,11 @@ export default class App extends Vue {
       console.log(url.pathname)
       if (!url.protocol.startsWith(KYASH_DEEPLINK_PROTOCOL) 
         || !url.pathname.startsWith(KYASH_DEEPLINK_PATH_NAME)) {
-        throw new Error("Invalid kyash deeplink url.");
+        throw new Error("Invalid kyash deeplink url: '" + barcodeString + "'");
       }
       return url
     } catch (e) {
-      throw new Error("Invalid kyash deeplink url.");
+      throw new Error("Invalid kyash deeplink url: '" + barcodeString + "'");
     }
   }
 }
