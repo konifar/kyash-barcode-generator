@@ -138,7 +138,10 @@ export default Vue.extend({
   methods: {
     window:onload = function() {
       // Remove capture attribute because only camera launches on Android
-      document.getElementById("qr-capture").removeAttribute("capture");
+      const qrCapture = document.getElementById("qr-capture")
+      if (qrCapture !== null) {
+        qrCapture.removeAttribute("capture");
+      }
     },
 
     onDecode(decodedString: string) {
