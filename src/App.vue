@@ -31,7 +31,7 @@
               </div>
             </QrcodeDropZone>
 
-            <QrcodeCapture @decode="onDecode" class="my-4" />
+            <QrcodeCapture @decode="onDecode" class="my-4" id="qr-capture" />
 
             <v-alert
               v-if="errorMessage !== ''"
@@ -136,6 +136,11 @@ export default Vue.extend({
   }),
 
   methods: {
+    window:onload = function() {
+      // Remove capture attribute because only camera launches on Android
+      document.getElementById("qr-capture").removeAttribute("capture");
+    },
+
     onDecode(decodedString: string) {
       try {
         this.errorMessage = "";
