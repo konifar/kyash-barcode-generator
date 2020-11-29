@@ -15,7 +15,7 @@
       <v-container>
         <v-row>
           <!-- Barcode reading area -->
-          <v-col cols="12" xs="12" md="4">
+          <v-col cols="12" xs="12" md="4" class="pr-4">
             <QrcodeDropZone
               @detect="onDetect"
               @dragover="onDragOver"
@@ -174,7 +174,6 @@ export default class App extends Vue {
 <style>
 .drop-area {
   height: 300px;
-  width: 300px;
   color: #fff;
   text-align: center;
   font-weight: bold;
