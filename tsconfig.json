@@ -23,10 +23,6 @@
     "paths": {
       "@/*": [
         "src/*"
-      ],
-      "vue-qrcode-reader": [
-        "types/vue-qrcode-reader",
-        "types/qrcode.vue"
       ]
     },
     "lib": [
