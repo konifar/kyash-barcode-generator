@@ -18,24 +18,40 @@
     <v-main>
       <v-container>
         <v-row>
-          <v-col cols="12" sm="12" md="4" style="background-color: #FFCDD2">
-            <p v-if="error !== null" class="drop-error">
-              {{ error }}
-            </p>
-            <QrcodeDropZone @detect="onDetect" @dragover="onDragOver" @init="logErrors">
-              <div>
-              <div class="drop-area" :class="{ 'dragover': dragover }">
-                DROP SOME IMAGES HERE
-              </div>
-              <QrcodeVue :value="result" :size="200" />
+          <!-- Barcode reading area -->
+          <v-col cols="12" xs="12" md="4">
+            <QrcodeDropZone 
+              @detect="onDetect" 
+              @dragover="onDragOver" 
+              @init="onDragInit">
+              <div 
+                class="drop-area" 
+                :class="{ 'dragover': isDragging }">
+                Drag Kyash barcode here
+                <QrcodeVue 
+                  v-if="url !== ''"
+                  :value="url"
+                  :size="200" />
               </div>
             </QrcodeDropZone>
+
             <QrcodeCapture @decode="onDecode" />
+
+            <v-alert 
+              v-if="errorMessage !== ''" 
+              border="left"
+              dismissible
+              outlined
+              type="error">
+              {{ errorMessage }}
+            </v-alert>
           </v-col>
-          <v-col cols="12" sm="12" md="8" style="background-color: #F8BBD0">
-            <p class="decode-result">Last result: <b>{{ result }}</b></p>
+
+          <!-- Barcode data area -->
+          <v-col cols="12" xs="12" md="8" style="background-color: #F8BBD0">
+            <p class="decode-result">Last result: <b>{{ url }}</b></p>
             <v-text-field
-              v-model="result"
+              v-model="url"
               label="Amount"
             />
             <v-text-field
@@ -64,37 +80,37 @@ export default Vue.extend({
   },
 
   data: () => ({
-    result: "",
-    error: "",
-    dragover: false
+    url: "",
+    errorMessage: "",
+    isDragging: false
   }),
   
   methods: {
     onDecode (decodedString: string) {
-      this.result = decodedString
+      this.url = decodedString
     },
     async onDetect (promise: Promise<any>) {
       try {
         const { content } = await promise
-        this.result = content
-        this.error = ""
+        this.url = content
+        this.errorMessage = ""
       } catch (error) {
         if (error.name === 'DropImageFetchError') {
-          this.error = 'Sorry, you can\'t load cross-origin images :/'
+          this.errorMessage = 'Failed to load images.'
         } else if (error.name === 'DropImageDecodeError') {
-          this.error = 'Ok, that\'s not an image. That can\'t be decoded.'
+          this.errorMessage = 'Failed to decode file. Maybe it\'s not an image.'
         } else {
-          this.error = 'Ups, what kind of error is this?! ' + error.message
+          this.errorMessage = 'Ups, what kind of error is this?! ' + error.message
         }
       }
     },
 
-    logErrors (promise: Promise<string>) {
+    onDragInit (promise: Promise<any>) {
       promise.catch(console.error)
     },
 
     onDragOver (isDraggingOver: boolean) {
-      this.dragover = isDraggingOver
+      this.isDragging = isDraggingOver
     }
   }
 });
@@ -103,6 +119,7 @@ export default Vue.extend({
 <style>
 .drop-area {
   height: 300px;
+  width: 300px;
   color: #fff;
   text-align: center;
   font-weight: bold;
